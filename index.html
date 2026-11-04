@@ -253,7 +253,7 @@ dialog::backdrop{background:rgba(0,0,0,.35)}
           <p class="hint">저장한 상품은 아래 목록의 수정 버튼으로 다시 열어 고칠 수 있어요.</p>
           <div class="row"><label class="l" for="name">상품명</label><div class="field text w" style="width:240px"><input id="name" type="text" placeholder="예: 와플 니트 가디건"></div></div>
           <div class="row"><label class="l" for="colorIn">색상<span class="sub">입력 후 Enter, 쉼표로 여러 개</span></label><div class="optbox"><div class="chips" id="colorChips"></div><div class="field text" style="width:240px"><input id="colorIn" type="text" placeholder="예: 블랙, 아이보리"></div></div></div>
-          <div class="row"><span class="l">사이즈<span class="sub">있는 사이즈 모두 선택</span></span><div class="sizes" id="sizes"><button data-size="S">S</button><button data-size="M">M</button><button data-size="L">L</button><button data-size="XL">XL</button><button data-size="2XL">2XL</button></div></div>
+          <div class="row"><span class="l">사이즈<span class="sub">있는 사이즈 모두 선택</span></span><div class="sizes" id="sizes"><button data-size="FREE">FREE</button><button data-size="S">S</button><button data-size="M">M</button><button data-size="L">L</button><button data-size="XL">XL</button><button data-size="2XL">2XL</button></div></div>
           <div class="row"><label class="l" for="vendorSel">거래처<span class="sub"><button class="linkbtn" id="goVendor">거래처 추가하기</button></span></label><div class="field w" style="width:240px"><select id="vendorSel"></select></div></div>
           <div class="row"><label class="l" for="code">거래처 품번<span class="sub">선택 입력</span></label><div class="field text w" style="width:240px"><input id="code" type="text" placeholder="예: A-1023"></div></div>
         </section>
@@ -423,7 +423,7 @@ const DEFAULT={
 };
 const useLocal=!SHEET_API;
 const DB={products:[],vendors:[],events:[]};
-const SIZES=['S','M','L','XL','2XL'];
+const SIZES=['FREE','S','M','L','XL','2XL'];
 let editingProduct=null;
 const asList=v=>Array.isArray(v)?v:(v?String(v).split(/\s*,\s*/).filter(Boolean):[]);
 const pColors=p=>{const a=asList(p.colors);return a.length?a:asList(p.snap&&p.snap.colors)};
