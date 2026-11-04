@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>COSY 판가계산기</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EEF0F2; --surface:#FFFFFF; --ink:#1A1C1F; --mid:#6A6E75; --soft:#9BA0A7;
+  --line:#DCDFE3; --field:#F6F7F8; --tag:#FFFFFF; --string:#B9BDC3;
+  --c1:#2B2E33; --c2:#5A5F67; --c3:#8A9099; --c4:#B3B8BF; --c5:#C9CDD2; --c6:#DDE0E4; --c7:#EBEDEF;
+  --profit:#2F6B4F; --loss:#B23A3A; --live:#2F6B4F; --livebg:#E4F0EA;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#16181B; --surface:#1F2226; --ink:#ECEEF0; --mid:#A2A7AE; --soft:#767C84;
+    --line:#33373D; --field:#272A2F; --tag:#25282D; --string:#4A4F56;
+    --c1:#E6E8EB; --c2:#BFC3C9; --c3:#959BA3; --c4:#737981; --c5:#5A5F66; --c6:#464A50; --c7:#383B40;
+    --profit:#7BC4A0; --loss:#F08A8A; --live:#7BC4A0; --livebg:#1F3329;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#16181B; --surface:#1F2226; --ink:#ECEEF0; --mid:#A2A7AE; --soft:#767C84;
+  --line:#33373D; --field:#272A2F; --tag:#25282D; --string:#4A4F56;
+  --c1:#E6E8EB; --c2:#BFC3C9; --c3:#959BA3; --c4:#737981; --c5:#5A5F66; --c6:#464A50; --c7:#383B40;
+  --profit:#7BC4A0; --loss:#F08A8A; --live:#7BC4A0; --livebg:#1F3329;
+  color-scheme:dark;
+}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums}
+[hidden]{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+.brand{font-size:26px;font-weight:300;letter-spacing:.32em;margin:0}
+.hright{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+nav.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:8px 0 22px;overflow-x:auto}
+nav.tabs a{color:var(--mid);text-decoration:none;font-weight:500;padding:12px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+nav.tabs a:focus-visible{outline:2px solid var(--ink);outline-offset:-2px}
+.syncnote{font-size:12px;color:var(--soft);margin:0}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:28px;align-items:start}
+@media (max-width:920px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px 22px 6px;margin-bottom:16px}
+.panel h2{font-size:16px;font-weight:600;margin:0 0 4px}
+.panel .hint{font-size:13px;color:var(--mid);margin:0 0 16px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row label.l,.row .l{font-size:14px;color:var(--ink)}
+.row .sub{display:block;font-size:12px;color:var(--soft)}
+.field{display:flex;align-items:center;background:var(--field);border:1px solid transparent;border-radius:8px;padding:0 10px;height:38px;min-width:0}
+.field:focus-within{border-color:var(--ink)}
+.field input,.field select,.field textarea{border:0;background:transparent;color:var(--ink);font:inherit;font-variant-numeric:tabular-nums;width:100%;text-align:right;outline:none;padding:0}
+.field select{text-align:left;cursor:pointer}
+.field .u{color:var(--mid);font-size:13px;margin-left:6px;white-space:nowrap}
+.field.w{width:170px}
+.field.s{width:96px}
+.field.text input,.field textarea{text-align:left}
+.field.area{height:auto;padding:8px 10px}
+.field.area textarea{resize:vertical;min-height:60px}
+.seg{display:inline-flex;background:var(--field);border-radius:8px;padding:3px}
+.seg button{border:0;background:transparent;color:var(--mid);font:inherit;font-size:13px;padding:6px 12px;border-radius:6px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:600;box-shadow:0 0 0 1px var(--line)}
+.inline{display:flex;gap:8px;align-items:center}
+.sw{position:relative;width:42px;height:24px;flex:none}
+.sw input{position:absolute;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.sw span{position:absolute;inset:0;background:var(--line);border-radius:12px;transition:background .15s}
+.sw span::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.sw input:checked+span{background:var(--ink)}
+.sw input:checked+span::after{transform:translateX(18px)}
+.sw input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}
+.linkbtn{border:0;background:none;color:var(--mid);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer;padding:0}
+
+.sup{display:grid;grid-template-columns:24px minmax(0,1fr) 112px 96px 32px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.sup:first-child{border-top:0}
+.sup input[type=checkbox]{width:18px;height:18px;accent-color:var(--ink);margin:0}
+.sup .field{height:34px}
+.sup.off .field{opacity:.45}
+.sup select{font:inherit;font-size:13px;color:var(--ink);background:var(--field);border:0;border-radius:8px;height:34px;padding:0 8px}
+.x{border:0;background:transparent;color:var(--soft);font-size:18px;cursor:pointer;border-radius:6px;height:32px}
+.x:hover{color:var(--loss)}
+.addbtn{border:1px dashed var(--line);background:transparent;color:var(--mid);font:inherit;font-size:13px;border-radius:8px;width:100%;padding:10px;margin:8px 0 16px;cursor:pointer}
+.addbtn:hover{color:var(--ink);border-color:var(--ink)}
+.supsum{display:flex;justify-content:space-between;font-size:13px;color:var(--mid);padding:0 0 16px}
+@media (max-width:560px){
+  .sup{grid-template-columns:24px minmax(0,1fr) 32px;grid-template-areas:"c n x" ". p m"}
+  .sup>:nth-child(1){grid-area:c}.sup>:nth-child(2){grid-area:n}.sup>:nth-child(3){grid-area:p}.sup>:nth-child(4){grid-area:m}.sup>:nth-child(5){grid-area:x}
+  .field.w{width:140px}
+}
+
+.side{position:sticky;top:calc(16px + env(safe-area-inset-top,0px))}
+@media (max-width:920px){.side{position:static}}
+.tagwrap{position:relative;padding-top:34px}
+.tagwrap::before{content:"";position:absolute;left:50%;top:0;width:1px;height:58px;background:var(--string);transform:rotate(8deg);transform-origin:top}
+.tag{position:relative;background:var(--tag);border:1px solid var(--line);border-radius:6px 6px 14px 14px;padding:52px 24px 24px;clip-path:polygon(18% 0,82% 0,100% 8%,100% 100%,0 100%,0 8%)}
+.tag .hole{position:absolute;top:18px;left:50%;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--bg);border:1px solid var(--line)}
+.tag .pname{font-size:13px;color:var(--soft);text-align:center;margin:0 0 10px;letter-spacing:.2em}
+.tag .row{padding:6px 0;border:0}
+.listp{text-align:center;margin:14px 0 0;font-size:15px;color:var(--soft);min-height:22px}
+.listp s{margin-right:6px}
+.listp b{color:var(--loss);font-weight:600}
+.price{font-size:46px;font-weight:300;text-align:center;letter-spacing:-.01em;line-height:1.1;margin:2px 0 4px}
+.price small{font-size:20px;margin-left:2px}
+.pricehint{text-align:center;font-size:12px;color:var(--soft);margin:0 0 18px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpis div{padding:12px 4px;text-align:center}
+.kpis div+div{border-left:1px solid var(--line)}
+.kpis b{display:block;font-size:18px;font-weight:600}
+.kpis span{font-size:12px;color:var(--mid)}
+.pos{color:var(--profit)}.neg{color:var(--loss)}
+.bar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:20px 0 12px;background:var(--c7)}
+.bar i{display:block;height:100%}
+.legend{list-style:none;margin:0;padding:0;font-size:13px}
+.legend li{display:flex;justify-content:space-between;gap:8px;padding:4px 0}
+.legend .k{display:flex;align-items:center;gap:8px;color:var(--mid)}
+.legend .k::before{content:"";width:10px;height:10px;border-radius:2px;background:var(--dot)}
+.legend .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:8px;color:var(--ink);font-weight:600}
+.warn{font-size:13px;color:var(--loss);text-align:center;margin:8px 0 0}
+.ladder{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-top:16px}
+.ladder h3{font-size:14px;font-weight:600;margin:0 0 8px}
+.ladder table{width:100%;border-collapse:collapse;font-size:13px}
+.ladder th{font-weight:500;color:var(--soft);text-align:right;padding:4px 0}
+.ladder th:first-child,.ladder td:first-child{text-align:left}
+.ladder td{text-align:right;padding:6px 0;border-top:1px solid var(--line)}
+.ladder tr.cur td{font-weight:600}
+.primary{border:0;border-radius:10px;background:var(--ink);color:var(--surface);font:inherit;font-weight:600;padding:12px 18px;cursor:pointer}
+.primary:disabled{opacity:.45;cursor:wait}
+.savebtn{width:100%;margin-top:16px;padding:13px}
+.ghost{border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13px;border-radius:8px;height:38px;padding:0 14px;cursor:pointer;white-space:nowrap}
+.danger{color:var(--loss)}
+button:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+.listhead{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:28px 0 10px}
+.listhead h2{font-size:16px;font-weight:600;margin:0}
+.tablewrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:14px}
+table.data{width:100%;border-collapse:collapse;font-size:14px;min-width:820px}
+table.data th{font-weight:500;color:var(--mid);font-size:13px;text-align:right;padding:12px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.data td{text-align:right;padding:11px 14px;border-top:1px solid var(--line);white-space:nowrap}
+table.data tr:first-child td{border-top:0}
+table.data th.l,table.data td.l{text-align:left}
+table.data td button{border:0;background:transparent;font:inherit;font-size:13px;color:var(--mid);cursor:pointer;padding:2px 6px}
+table.data td button:hover{color:var(--ink)}
+.dim{font-size:12px;color:var(--soft)}
+.empty{padding:24px;color:var(--mid);font-size:14px;text-align:center}
+
+/* 거래처 */
+.vgrid{display:grid;grid-template-columns:340px minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:920px){.vgrid{grid-template-columns:1fr}}
+.vform .row{flex-wrap:wrap}
+.vform .field{width:100%}
+.vform .btns{display:flex;gap:8px;padding:14px 0 18px}
+.vcard{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:12px}
+.vhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.vhead h3{font-size:17px;font-weight:600;margin:0}
+.vmeta{font-size:13px;color:var(--mid);margin:2px 0 0}
+.vmemo{font-size:13px;color:var(--mid);background:var(--field);border-radius:8px;padding:8px 12px;margin:12px 0 0;white-space:pre-wrap}
+.vcount{font-size:13px;color:var(--mid);margin:14px 0 6px}
+.vtable{width:100%;border-collapse:collapse;font-size:13px}
+.vtable td{padding:7px 0;border-top:1px solid var(--line);text-align:right}
+.vtable td:first-child{text-align:left}
+.vtable button{border:0;background:none;color:var(--mid);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+
+/* 캘린더 */
+.calbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.calbar h2{font-size:22px;font-weight:500;margin:0 6px;min-width:120px;text-align:center}
+.cal{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.calhead,.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+.calhead div{font-size:12px;color:var(--mid);text-align:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.calhead div:first-child{color:var(--loss)}
+.day{min-height:112px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 6px 8px;cursor:pointer;display:flex;flex-direction:column;gap:3px;min-width:0}
+.day:nth-child(7n){border-right:0}
+.day:hover{background:var(--field)}
+.day .d{font-size:13px;color:var(--ink);width:24px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.day.out .d{color:var(--soft)}
+.day.sun .d{color:var(--loss)}
+.day.today .d{background:var(--ink);color:var(--surface)}
+.chip{display:block;width:100%;border:0;text-align:left;font:inherit;font-size:12px;line-height:1.3;padding:3px 6px;border-radius:4px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--c7);color:var(--ink)}
+.chip.s-live{background:var(--livebg);color:var(--live);font-weight:600}
+.chip.s-plan{background:var(--field);box-shadow:inset 0 0 0 1px var(--line);color:var(--ink)}
+.chip.s-done{background:transparent;color:var(--soft);text-decoration:line-through}
+.chip.cont{border-top-left-radius:0;border-bottom-left-radius:0}
+@media (max-width:640px){.day{min-height:74px;padding:4px 2px}.chip{font-size:10px;padding:2px 3px}}
+.upcoming{margin-top:24px}
+.upcoming h3{font-size:16px;font-weight:600;margin:0 0 10px}
+.evrow{display:grid;grid-template-columns:150px minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;text-align:left;width:100%;font:inherit;color:inherit}
+.evrow:hover{border-color:var(--ink)}
+.evrow .dt{font-size:13px;color:var(--mid)}
+.evrow .tt{font-weight:600}
+.evrow .pp{font-size:12px;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{font-size:12px;padding:3px 8px;border-radius:10px;background:var(--field);color:var(--mid);white-space:nowrap}
+.badge.s-live{background:var(--livebg);color:var(--live)}
+@media (max-width:560px){.evrow{grid-template-columns:1fr auto}.evrow .dt{grid-column:1/-1}}
+
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);padding:0;width:min(520px,calc(100vw - 24px));max-height:calc(100vh - 40px)}
+dialog::backdrop{background:rgba(0,0,0,.35)}
+.dlg{padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px}
+.dlg h2{font-size:18px;font-weight:600;margin:0}
+.dlg label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mid)}
+.dlg .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dlg .field input,.dlg .field select{text-align:left}
+.plist{max-height:180px;overflow:auto;background:var(--field);border-radius:8px;padding:6px 10px}
+.plist label{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--ink);padding:5px 0}
+.plist input{accent-color:var(--ink)}
+.dlg .btns{display:flex;justify-content:space-between;gap:8px;margin-top:6px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--surface);padding:10px 18px;border-radius:20px;font-size:14px;opacity:0;transition:all .2s;pointer-events:none;z-index:9}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 class="brand">COSY</h1>
+    <div class="hright">
+      <p class="syncnote" id="syncNote"></p>
+      <div class="field text" style="width:140px"><input id="who" type="text" placeholder="저장자 이름" aria-label="저장자 이름"></div>
+      <button class="ghost" id="refresh">새로고침</button>
+    </div>
+  </header>
+  <nav class="tabs" aria-label="메뉴">
+    <a href="#calc" data-tab="calc">판가계산</a>
+    <a href="#vendors" data-tab="vendors">거래처</a>
+    <a href="#calendar" data-tab="calendar">공구 캘린더</a>
+  </nav>
+
+  <!-- 판가계산 -->
+  <section id="tab-calc">
+    <div class="grid">
+      <main>
+        <section class="panel">
+          <h2>상품 정보</h2>
+          <p class="hint">같은 상품명으로 다시 저장하면 기존 상품이 업데이트돼요.</p>
+          <div class="row"><label class="l" for="name">상품명</label><div class="field text w" style="width:240px"><input id="name" type="text" placeholder="예: 와플 니트 가디건"></div></div>
+          <div class="row"><label class="l" for="vendorSel">거래처<span class="sub"><button class="linkbtn" id="goVendor">거래처 추가하기</button></span></label><div class="field w" style="width:240px"><select id="vendorSel"></select></div></div>
+          <div class="row"><label class="l" for="code">거래처 품번<span class="sub">선택 입력</span></label><div class="field text w" style="width:240px"><input id="code" type="text" placeholder="예: A-1023"></div></div>
+        </section>
+
+        <section class="panel">
+          <h2>원가</h2>
+          <p class="hint">동대문 도매가와 사입삼촌 비용을 넣어주세요.</p>
+          <div class="row"><label class="l" for="wholesale">도매가 (동대문)<span class="sub">장당 매입가</span></label><div class="field w"><input id="wholesale" inputmode="numeric"><span class="u">원</span></div></div>
+          <div class="row"><label class="l" for="wvat">도매 자료(세금계산서) +10%<span class="sub">자료 받으면 도매가에 10% 추가 지급</span></label><label class="sw"><input type="checkbox" id="wvat"><span></span></label></div>
+          <div class="row"><label class="l" for="uncle">사입삼촌 비용<span class="sub">장당 고정 금액 또는 도매가 대비 %</span></label>
+            <div class="inline"><div class="seg" data-seg="uncleMode"><button data-v="won">원</button><button data-v="pct">%</button></div><div class="field s"><input id="uncle" inputmode="decimal"><span class="u" id="uncleU">원</span></div></div></div>
+        </section>
+
+        <section class="panel">
+          <h2>카페24 수수료 · 세금</h2>
+          <p class="hint">결제(PG) 수수료는 판매가 기준으로 빠져요. 계약 요율로 바꿔 쓰세요.</p>
+          <div class="row"><label class="l" for="pg">결제 수수료 (PG)<span class="sub">카드·간편결제 평균 요율</span></label><div class="field s"><input id="pg" inputmode="decimal"><span class="u">%</span></div></div>
+          <div class="row"><label class="l" for="extra">기타 판매 수수료<span class="sub">앱·마케팅 툴 등 판매가 대비 %</span></label><div class="field s"><input id="extra" inputmode="decimal"><span class="u">%</span></div></div>
+          <div class="row"><label class="l" for="vat">부가세 10% 반영<span class="sub">일반과세자, 판매가에서 1/11 차감</span></label><label class="sw"><input type="checkbox" id="vat"><span></span></label></div>
+          <div class="row"><label class="l" for="loss">반품·불량 손실<span class="sub">판매가 대비 충당 %</span></label><div class="field s"><input id="loss" inputmode="decimal"><span class="u">%</span></div></div>
+        </section>
+
+        <section class="panel">
+          <h2>택배비</h2>
+          <p class="hint">무료배송이면 택배비 전액이, 유료배송이면 고객 부담금과의 차액만 원가에 들어가요.</p>
+          <div class="row"><span class="l">배송 방식</span><div class="seg" data-seg="shipMode"><button data-v="free">무료배송</button><button data-v="paid">유료배송</button></div></div>
+          <div class="row"><label class="l" for="shipCost">택배 계약 단가<span class="sub">박스 1개당</span></label><div class="field w"><input id="shipCost" inputmode="numeric"><span class="u">원</span></div></div>
+          <div class="row" id="chargeRow"><label class="l" for="shipCharge">고객 부담 배송비</label><div class="field w"><input id="shipCharge" inputmode="numeric"><span class="u">원</span></div></div>
+          <div class="row"><label class="l" for="bundle">주문당 평균 수량<span class="sub">합배송 시 택배비·주문당 소모품을 나눠요</span></label><div class="field s"><input id="bundle" inputmode="decimal"><span class="u">장</span></div></div>
+        </section>
+
+        <section class="panel">
+          <h2>소모품</h2>
+          <p class="hint">쓰는 것만 체크하세요. 주문당 항목은 평균 수량으로 나눠 장당 원가에 녹여요.</p>
+          <div id="supList"></div>
+          <button class="addbtn" id="addSup">소모품 추가</button>
+          <div class="supsum"><span>장당 소모품 원가</span><b class="num" id="supTotal">0원</b></div>
+        </section>
+      </main>
+
+      <aside class="side">
+        <div class="tagwrap">
+          <div class="tag">
+            <span class="hole" aria-hidden="true"></span>
+            <p class="pname">COSY</p>
+            <div class="inline" style="justify-content:center;margin-bottom:10px">
+              <div class="seg" data-seg="mode"><button data-v="price">판매가로 계산</button><button data-v="margin">마진율로 계산</button></div>
+            </div>
+            <div id="modePrice" class="row"><label class="l" for="manual">판매가<span class="sub">고객 결제 금액</span></label><div class="field w"><input id="manual" inputmode="numeric"><span class="u">원</span></div></div>
+            <div id="modeMargin" class="row"><label class="l" for="target">목표 마진율</label>
+              <div class="inline"><div class="field s"><input id="target" inputmode="decimal"><span class="u">%</span></div>
+              <div class="field" style="width:110px"><select id="round" aria-label="끝자리 처리"><option value="900">900원 끝</option><option value="1000">천원 올림</option><option value="100">백원 올림</option><option value="none">그대로</option></select></div></div></div>
+            <div class="row"><label class="l" for="list">정가<span class="sub">쇼핑몰에 올릴 표시가</span></label><div class="field w"><input id="list" inputmode="numeric"><span class="u">원</span></div></div>
+            <p class="listp num" id="listp"></p>
+            <p class="price num" id="price">0<small>원</small></p>
+            <p class="pricehint num" id="priceHint"></p>
+            <div class="kpis num">
+              <div><b id="kProfit">0</b><span>장당 순이익</span></div>
+              <div><b id="kMargin">0%</b><span>마진율</span></div>
+              <div><b id="kMarkup">0배</b><span>도매가 대비</span></div>
+            </div>
+            <div class="bar" id="bar" aria-hidden="true"></div>
+            <ul class="legend num" id="legend"></ul>
+            <p class="warn" id="warn" hidden></p>
+            <button class="primary savebtn" id="save">이 상품 저장</button>
+          </div>
+        </div>
+        <div class="ladder">
+          <h3>마진율별 판매가</h3>
+          <table class="num"><thead><tr><th>마진율</th><th>판매가</th><th>순이익</th></tr></thead><tbody id="ladder"></tbody></table>
+        </div>
+      </aside>
+    </div>
+
+    <div class="listhead">
+      <h2>저장한 상품</h2>
+      <div class="inline">
+        <div class="field text" style="width:180px"><input id="q" type="search" placeholder="상품명 검색" aria-label="상품명 검색"></div>
+        <div class="field" style="width:150px"><select id="vf" aria-label="거래처 필터"></select></div>
+      </div>
+    </div>
+    <div class="tablewrap"><table class="data num"><thead><tr><th class="l">상품명</th><th class="l">거래처</th><th>도매가</th><th>장당 원가</th><th>정가</th><th>판매가</th><th>할인율</th><th>순이익</th><th>마진율</th><th class="l">저장</th><th></th></tr></thead><tbody id="savedBody"></tbody></table><div class="empty" id="savedEmpty">아직 저장한 상품이 없어요. 계산 후 이 상품 저장을 누르면 여기 모여요.</div></div>
+  </section>
+
+  <!-- 거래처 -->
+  <section id="tab-vendors" hidden>
+    <div class="vgrid">
+      <section class="panel vform">
+        <h2 id="vFormTitle">거래처 추가</h2>
+        <p class="hint">동대문 상가와 호수까지 적어두면 사입할 때 편해요.</p>
+        <div class="row"><label class="l" for="vName">거래처명</label><div class="field text"><input id="vName" type="text" placeholder="예: 블랑쉬"></div></div>
+        <div class="row"><label class="l" for="vLoc">상가·호수</label><div class="field text"><input id="vLoc" type="text" placeholder="예: 디오트 2층 B-12"></div></div>
+        <div class="row"><label class="l" for="vContact">연락처</label><div class="field text"><input id="vContact" type="text" placeholder="전화번호 또는 카톡 ID"></div></div>
+        <div class="row"><label class="l" for="vMemo">메모</label><div class="field text area"><textarea id="vMemo" rows="3" placeholder="결제 방식, 마감 시간, 샘플 정책 등"></textarea></div></div>
+        <div class="btns"><button class="primary" id="vSave">거래처 저장</button><button class="ghost" id="vCancel" hidden>수정 취소</button></div>
+      </section>
+      <div>
+        <div class="listhead" style="margin-top:0"><h2>거래처 목록</h2><div class="field text" style="width:200px"><input id="vq" type="search" placeholder="거래처·상품 검색" aria-label="거래처 검색"></div></div>
+        <div id="vList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 캘린더 -->
+  <section id="tab-calendar" hidden>
+    <div class="calbar">
+      <div class="inline">
+        <button class="ghost" id="calPrev" aria-label="이전 달">‹</button>
+        <h2 id="calTitle" class="num"></h2>
+        <button class="ghost" id="calNext" aria-label="다음 달">›</button>
+        <button class="ghost" id="calToday">오늘</button>
+      </div>
+      <button class="primary" id="addEvent">공구 일정 추가</button>
+    </div>
+    <div class="cal">
+      <div class="calhead"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div>
+      <div class="calgrid" id="calGrid"></div>
+    </div>
+    <section class="upcoming">
+      <h3>다가오는 공구</h3>
+      <div id="upList"></div>
+    </section>
+  </section>
+</div>
+
+<dialog id="evDlg">
+  <div class="dlg">
+    <h2 id="evTitleH">공구 일정 추가</h2>
+    <label class="f">공구명<div class="field text"><input id="evTitle" type="text" placeholder="예: 11월 2차 니트 공구"></div></label>
+    <div class="two">
+      <label class="f">시작일<div class="field"><input id="evStart" type="date"></div></label>
+      <label class="f">종료일<div class="field"><input id="evEnd" type="date"></div></label>
+    </div>
+    <label class="f">상태<div class="field"><select id="evStatus"><option value="준비중">준비중</option><option value="진행중">진행중</option><option value="마감">마감</option></select></div></label>
+    <div class="f" style="display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--mid)">공구 상품
+      <div class="field text"><input id="evPq" type="search" placeholder="저장한 상품 검색" aria-label="공구 상품 검색"></div>
+      <div class="plist" id="evProducts"></div>
+    </div>
+    <label class="f">메모<div class="field text area"><textarea id="evMemo" rows="3" placeholder="공구 링크, 발주 마감일, 입고 예정일 등"></textarea></div></label>
+    <div class="btns">
+      <button class="ghost danger" id="evDel">삭제</button>
+      <div class="inline"><button class="ghost" id="evClose">닫기</button><button class="primary" id="evSave">일정 저장</button></div>
+    </div>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// 구글 시트 Apps Script 웹앱 URL을 따옴표 안에 붙여넣으세요 (https://script.google.com/macros/s/.../exec)
+const SHEET_API='';
+
+const KEY_STATE='cosy-pricing-state-v2', KEY_LOCAL='cosy-local-db-v2', KEY_PASS='cosy-save-key', KEY_WHO='cosy-who';
+const DEFAULT={
+  name:'', vendorId:'', code:'',
+  wholesale:15000, wvat:false, uncleMode:'won', uncle:500,
+  pg:3.4, extra:0, vat:true, loss:3,
+  shipMode:'free', shipCost:3000, shipCharge:3000, bundle:1.5,
+  supplies:[
+    {id:1,name:'OPP·폴리백',cost:60,per:'item',on:true},
+    {id:2,name:'행택·라벨',cost:80,per:'item',on:true},
+    {id:3,name:'택배봉투·박스',cost:150,per:'order',on:true},
+    {id:4,name:'테이프·완충재',cost:40,per:'order',on:true},
+    {id:5,name:'감사카드·스티커',cost:50,per:'order',on:true},
+    {id:6,name:'쇼핑백',cost:300,per:'order',on:false}
+  ],
+  mode:'price', target:40, round:'900', manual:29900, list:39000
+};
+const useLocal=!SHEET_API;
+const DB={products:[],vendors:[],events:[]};
+
+function load(k,fb){try{const v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function localGet(k){try{return localStorage.getItem(k)||''}catch(e){return ''}}
+let S=Object.assign(structuredClone(DEFAULT),load(KEY_STATE,{}));
+
+const $=id=>document.getElementById(id);
+const won=n=>(isFinite(n)?Math.round(n):0).toLocaleString('ko-KR');
+const parse=v=>{const n=parseFloat(String(v).replace(/[^0-9.\-]/g,''));return isNaN(n)?0:n};
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmtInput=(el,v,isInt)=>{el.value=isInt?Number(v||0).toLocaleString('ko-KR'):String(v??'')};
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const md=s=>{if(!s)return '';const [y,m,d]=s.split('-');return `${+m}/${+d}`};
+const vendorName=id=>{const v=DB.vendors.find(x=>x.id===id);return v?v.name:''};
+function toast(t){const el=$('toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),1800)}
+function setNote(t){$('syncNote').textContent=t}
+
+/* ---------- 데이터 (구글 시트) ---------- */
+async function api(payload){
+  const res=payload
+    ?await fetch(SHEET_API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(payload)})
+    :await fetch(SHEET_API+'?t='+Date.now());
+  const j=await res.json();
+  if(!j.ok)throw new Error(j.error||'error');
+  return j;
+}
+async function withKey(payload){
+  payload.key=localGet(KEY_PASS);
+  try{return await api(payload)}catch(e){
+    if(e.message!=='bad_key')throw e;
+    const k=prompt('저장 비밀번호를 입력해주세요');
+    if(!k)throw new Error('cancel');
+    payload.key=k;
+    const j=await api(payload);
+    try{localStorage.setItem(KEY_PASS,k)}catch(_){}
+    return j;
+  }
+}
+function errMsg(e,verb){
+  if(e.message==='cancel')return verb+' 취소했어요';
+  if(e.message==='bad_key'){try{localStorage.removeItem(KEY_PASS)}catch(_){}return '저장 비밀번호가 맞지 않아요'}
+  return verb+' 못했어요. 잠시 후 다시 해주세요';
+}
+function putLocal(col,item){const a=DB[col];const i=a.findIndex(x=>x.id===item.id);if(i>=0)a[i]=item;else a.unshift(item)}
+async function upsert(col,item){
+  if(!useLocal)await withKey({action:'upsert',col,item});
+  putLocal(col,item);
+  if(useLocal)store(KEY_LOCAL,DB);
+  renderAll();
+}
+async function removeItem(col,id){
+  if(!useLocal)await withKey({action:'delete',col,id});
+  DB[col]=DB[col].filter(x=>x.id!==id);
+  if(useLocal)store(KEY_LOCAL,DB);
+  renderAll();
+}
+async function loadAll(silent){
+  if(useLocal){
+    const l=load(KEY_LOCAL,{});DB.products=l.products||[];DB.vendors=l.vendors||[];DB.events=l.events||[];
+    setNote('SHEET_API가 비어 있어 이 브라우저에만 저장돼요');renderAll();return;
+  }
+  if(!silent)setNote('구글 시트 불러오는 중');
+  try{
+    const j=await api();
+    DB.products=(j.products||[]).sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));
+    DB.vendors=(j.vendors||[]).sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));
+    DB.events=(j.events||[]).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+    setNote('시트 동기화 '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}));
+    renderAll();
+  }catch(e){setNote('시트 연결 실패: 웹앱 URL과 액세스 권한을 확인해주세요')}
+}
+function renderAll(){renderVendorSelects();renderSaved();renderVendors();renderCalendar();renderUpcoming()}
+
+/* ---------- 판가계산 ---------- */
+const numFields={wholesale:1,uncle:0,pg:0,extra:0,loss:0,shipCost:1,shipCharge:1,bundle:0,target:0,manual:1,list:1};
+const isIntField=k=>k==='uncle'?S.uncleMode==='won':!!numFields[k];
+function bindCalc(){
+  $('name').addEventListener('input',e=>{S.name=e.target.value;save()});
+  $('code').addEventListener('input',e=>{S.code=e.target.value;save()});
+  $('vendorSel').addEventListener('change',e=>{S.vendorId=e.target.value;save()});
+  $('goVendor').addEventListener('click',()=>{location.hash='vendors';setTimeout(()=>$('vName').focus(),50)});
+  for(const k in numFields){
+    const el=$(k);
+    el.addEventListener('input',()=>{
+      S[k]=parse(el.value);
+      if(isIntField(k)){const pos=el.value.length-el.selectionStart;fmtInput(el,S[k],true);const p=Math.max(0,el.value.length-pos);el.setSelectionRange(p,p)}
+      calc();
+    });
+  }
+  ['wvat','vat'].forEach(k=>$(k).addEventListener('change',e=>{S[k]=e.target.checked;calc()}));
+  $('round').addEventListener('change',e=>{S.round=e.target.value;calc()});
+  document.querySelectorAll('[data-seg]').forEach(seg=>{
+    const key=seg.dataset.seg;
+    seg.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{
+      S[key]=b.dataset.v;
+      if(key==='uncleMode'){S.uncle=S.uncleMode==='won'?500:3;fmtInput($('uncle'),S.uncle,S.uncleMode==='won')}
+      if(key==='mode'&&S.mode==='price'&&isFinite(lastPrice)&&lastPrice){S.manual=lastPrice;fmtInput($('manual'),S.manual,true)}
+      calc();
+    }));
+  });
+  $('addSup').addEventListener('click',()=>{S.supplies.push({id:Date.now(),name:'',cost:0,per:'item',on:true});renderSup(true);calc()});
+  $('save').addEventListener('click',saveProduct);
+}
+function fillCalcInputs(){
+  $('name').value=S.name;$('code').value=S.code||'';
+  for(const k in numFields)fmtInput($(k),S[k],isIntField(k));
+  $('wvat').checked=S.wvat;$('vat').checked=S.vat;$('round').value=S.round;
+  renderVendorSelects();renderSup();calc();
+}
+function renderSup(focusLast){
+  const box=$('supList');box.innerHTML='';
+  S.supplies.forEach((s,i)=>{
+    const r=document.createElement('div');r.className='sup'+(s.on?'':' off');
+    r.innerHTML=`<input type="checkbox" ${s.on?'checked':''} aria-label="사용">
+      <div class="field text"><input type="text" value="${esc(s.name)}" placeholder="항목 이름" aria-label="소모품 이름"></div>
+      <div class="field"><input inputmode="numeric" value="${Number(s.cost).toLocaleString('ko-KR')}" aria-label="단가"><span class="u">원</span></div>
+      <select aria-label="기준"><option value="item">장당</option><option value="order">주문당</option></select>
+      <button class="x" aria-label="삭제">×</button>`;
+    const ins=r.querySelectorAll('input');const cb=ins[0],nm=ins[1],ct=ins[2],sel=r.querySelector('select'),del=r.querySelector('.x');
+    sel.value=s.per;
+    cb.addEventListener('change',()=>{s.on=cb.checked;r.classList.toggle('off',!s.on);calc()});
+    nm.addEventListener('input',()=>{s.name=nm.value;save()});
+    ct.addEventListener('input',()=>{s.cost=parse(ct.value);const pos=ct.value.length-ct.selectionStart;ct.value=Number(s.cost).toLocaleString('ko-KR');const p=Math.max(0,ct.value.length-pos);ct.setSelectionRange(p,p);calc()});
+    sel.addEventListener('change',()=>{s.per=sel.value;calc()});
+    del.addEventListener('click',()=>{S.supplies.splice(i,1);renderSup();calc()});
+    box.appendChild(r);
+  });
+  if(focusLast){const t=box.querySelector('.sup:last-child input[type=text]');t&&t.focus()}
+}
+function roundPrice(p,mode){
+  if(!isFinite(p)||p<=0)return p;
+  if(mode==='100')return Math.ceil(p/100)*100;
+  if(mode==='1000')return Math.ceil(p/1000)*1000;
+  if(mode==='900'){let n=Math.ceil((p+100)/1000)*1000-100;if(n<p)n+=1000;return n}
+  return Math.ceil(p);
+}
+function core(st){
+  const W=st.wholesale||0, bundle=Math.max(1,st.bundle||1);
+  const wCost=W*(st.wvat&&!st.vat?1.1:1);
+  const uncle=st.uncleMode==='won'?(st.uncle||0):W*(st.uncle||0)/100;
+  const sup=st.supplies.filter(s=>s.on).reduce((a,s)=>a+(s.per==='order'?s.cost/bundle:s.cost),0);
+  const ship=st.shipMode==='free'?(st.shipCost||0)/bundle:Math.max(0,(st.shipCost||0)-(st.shipCharge||0))/bundle;
+  const C=wCost+uncle+sup+ship;
+  const v=st.vat?1/1.1:1, fRate=((st.pg||0)+(st.extra||0))/100, lRate=(st.loss||0)/100;
+  const R=v-fRate-lRate;
+  const priceFor=m=>{const d=R-m/100;return d>0?C/d:Infinity};
+  const result=P=>{const fee=P*fRate,lossAmt=P*lRate,vatAmt=st.vat?P-P/1.1:0;const profit=P-vatAmt-fee-lossAmt-C;return {P,fee,lossAmt,vatAmt,profit,margin:P>0?profit/P:0,markup:W>0?P/W:0}};
+  return {W,wCost,uncle,sup,ship,C,R,priceFor,result};
+}
+let lastPrice=0;
+function calc(){
+  const k=core(S);
+  $('uncleU').textContent=S.uncleMode==='won'?'원':'%';
+  document.querySelectorAll('[data-seg]').forEach(seg=>seg.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',S[seg.dataset.seg]===b.dataset.v)));
+  $('chargeRow').hidden=S.shipMode!=='paid';
+  $('modeMargin').hidden=S.mode!=='margin';$('modePrice').hidden=S.mode!=='price';
+  $('supTotal').textContent=won(k.sup)+'원';
+  let P,raw;
+  if(S.mode==='margin'){raw=k.priceFor(S.target||0);P=roundPrice(raw,S.round)}else P=S.manual||0;
+  const warn=$('warn');
+  if(!isFinite(P)){
+    lastPrice=0;$('price').textContent='계산 불가';$('priceHint').textContent='';$('listp').textContent='';warn.hidden=false;
+    warn.textContent='수수료·부가세·손실률과 목표 마진율 합이 100%를 넘어요. 마진율을 낮춰주세요.';
+    ['kProfit','kMargin','kMarkup'].forEach(i=>$(i).textContent='–');$('bar').innerHTML='';$('legend').innerHTML='';renderLadder(k);save();return;
+  }
+  lastPrice=P;
+  const r=k.result(P);
+  const L=S.list||0;
+  $('listp').innerHTML=L>P&&P>0?`<s>${won(L)}원</s><b>${Math.round((L-P)/L*100)}%</b>`:(L&&L<P?'<span class="neg" style="font-size:13px">정가가 판매가보다 낮아요</span>':'');
+  $('price').innerHTML=won(P)+'<small>원</small>';
+  $('priceHint').textContent=S.mode==='margin'?`계산값 ${won(raw)}원 → 끝자리 처리`:`장당 총원가 ${won(k.C)}원`;
+  $('kProfit').textContent=won(r.profit)+'원';$('kProfit').className=r.profit<0?'neg':'pos';
+  $('kMargin').textContent=(r.margin*100).toFixed(1)+'%';$('kMargin').className=r.margin<0?'neg':'';
+  $('kMarkup').textContent=r.markup.toFixed(2)+'배';
+  warn.hidden=r.profit>=0;warn.textContent=r.profit<0?'이 판매가로는 장당 적자예요.':'';
+  const segs=[
+    ['도매가'+(S.wvat&&!S.vat?' (+자료)':''),k.wCost,'--c1'],['사입삼촌',k.uncle,'--c2'],['소모품',k.sup,'--c3'],
+    ['택배비 분담',k.ship,'--c4'],['카페24·결제 수수료',r.fee,'--c5'],['반품·불량 충당',r.lossAmt,'--c6'],
+    ['부가세',r.vatAmt,'--c7'],['순이익',r.profit,'--profit']
+  ];
+  const base=Math.max(P,segs.slice(0,7).reduce((a,s)=>a+s[1],0));
+  $('bar').innerHTML=segs.filter(s=>s[1]>0).map(s=>`<i style="width:${s[1]/base*100}%;background:var(${s[2]})"></i>`).join('');
+  $('legend').innerHTML=segs.map(s=>`<li><span class="k" style="--dot:var(${s[2]})">${s[0]}</span><span class="${s[0]==='순이익'?(s[1]<0?'neg':'pos'):''}">${won(s[1])}원</span></li>`).join('')+`<li class="tot"><span>판매가</span><span>${won(P)}원</span></li>`;
+  renderLadder(k);save();
+}
+function renderLadder(k){
+  $('ladder').innerHTML=[20,30,40,50,60].map(m=>{
+    const P=roundPrice(k.priceFor(m),S.round);
+    if(!isFinite(P))return `<tr><td>${m}%</td><td>–</td><td>–</td></tr>`;
+    const r=k.result(P);const cur=S.mode==='margin'&&Number(S.target)===m;
+    return `<tr class="${cur?'cur':''}"><td>${m}%</td><td>${won(P)}원</td><td>${won(r.profit)}원</td></tr>`;
+  }).join('');
+}
+function save(){store(KEY_STATE,S)}
+
+async function saveProduct(){
+  const k=core(S);
+  if(!isFinite(lastPrice)||!lastPrice){toast('판매가를 먼저 입력해주세요');return}
+  const r=k.result(lastPrice), R=Math.round;
+  const name=S.name.trim();
+  if(!name){toast('상품명을 입력해주세요');$('name').focus();return}
+  const existing=DB.products.find(p=>p.name===name);
+  const snap=structuredClone(S);snap.mode='price';snap.manual=lastPrice;
+  const L=S.list||0;
+  const item={id:existing?existing.id:'p'+Date.now(),name,vendorId:S.vendorId||'',vendorName:vendorName(S.vendorId),code:S.code||'',
+    W:R(k.wCost),uncle:R(k.uncle),sup:R(k.sup),ship:R(k.ship),C:R(k.C),list:L,P:lastPrice,
+    discountPct:L>lastPrice?Math.round((L-lastPrice)/L*1000)/10:0,
+    fee:R(r.fee+r.lossAmt),vat:R(r.vatAmt),profit:R(r.profit),marginPct:Math.round(r.margin*1000)/10,
+    savedBy:$('who').value.trim(),savedAt:Date.now(),snap};
+  const btn=$('save');btn.disabled=true;btn.textContent='저장하는 중이에요';
+  try{await upsert('products',item);toast(existing?'저장한 상품을 업데이트했어요':'상품을 저장했어요')}
+  catch(e){toast(errMsg(e,'저장하지'))}
+  finally{btn.disabled=false;btn.textContent='이 상품 저장'}
+}
+function loadProduct(id){
+  const p=DB.products.find(x=>x.id===id);if(!p)return;
+  if(!p.snap||typeof p.snap!=='object'){toast('이 상품은 설정 정보가 없어 불러올 수 없어요');return}
+  S=Object.assign(structuredClone(DEFAULT),structuredClone(p.snap));
+  location.hash='calc';fillCalcInputs();window.scrollTo({top:0,behavior:'smooth'});toast('불러왔어요');
+}
+function renderVendorSelects(){
+  const opts=DB.vendors.map(v=>`<option value="${esc(v.id)}">${esc(v.name)}</option>`).join('');
+  const sel=$('vendorSel');
+  const known=!S.vendorId||DB.vendors.some(v=>v.id===S.vendorId);
+  sel.innerHTML=`<option value="">거래처 선택</option>`+opts+(known?'':`<option value="${esc(S.vendorId)}">삭제된 거래처</option>`);
+  sel.value=S.vendorId||'';
+  const vf=$('vf'),cur=vf.value;
+  vf.innerHTML=`<option value="">전체 거래처</option>`+opts+`<option value="__none">거래처 미지정</option>`;
+  vf.value=[...vf.options].some(o=>o.value===cur)?cur:'';
+}
+function renderSaved(){
+  const q=$('q').value.trim().toLowerCase(), vf=$('vf').value;
+  const list=DB.products.filter(p=>{
+    if(q&&!String(p.name).toLowerCase().includes(q)&&!String(p.code||'').toLowerCase().includes(q))return false;
+    if(vf==='__none')return !vendorName(p.vendorId);
+    if(vf)return p.vendorId===vf;
+    return true;
+  });
+  $('savedEmpty').hidden=list.length>0;
+  $('savedEmpty').textContent=DB.products.length?'조건에 맞는 상품이 없어요.':'아직 저장한 상품이 없어요. 계산 후 이 상품 저장을 누르면 여기 모여요.';
+  const day=t=>t?new Date(Number(t)).toLocaleDateString('ko-KR',{month:'numeric',day:'numeric'}):'';
+  $('savedBody').innerHTML=list.map(p=>`<tr>
+    <td class="l"><b>${esc(p.name)}</b>${p.code?` <span class="dim">${esc(p.code)}</span>`:''}</td>
+    <td class="l">${esc(vendorName(p.vendorId)||p.vendorName||'–')}</td>
+    <td>${won(p.W)}</td><td>${won(p.C)}</td><td>${p.list?won(p.list):'–'}</td><td><b>${won(p.P)}</b></td>
+    <td>${p.discountPct?p.discountPct+'%':'–'}</td>
+    <td class="${p.profit<0?'neg':'pos'}">${won(p.profit)}</td><td>${Number(p.marginPct||0).toFixed(1)}%</td>
+    <td class="l dim">${esc(p.savedBy||'')} ${day(p.savedAt)}</td>
+    <td><button data-load="${esc(p.id)}">불러오기</button><button data-del="${esc(p.id)}">삭제</button></td></tr>`).join('');
+}
+$('savedBody').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.load)return loadProduct(b.dataset.load);
+  if(b.dataset.del){
+    const p=DB.products.find(x=>x.id===b.dataset.del);if(!p)return;
+    if(!confirm(`${p.name} 을(를) 삭제할까요? 구글 시트에서도 지워져요.`))return;
+    try{await removeItem('products',p.id);toast('삭제했어요')}catch(err){toast(errMsg(err,'삭제하지'))}
+  }
+});
+$('q').addEventListener('input',renderSaved);$('vf').addEventListener('change',renderSaved);
+
+/* ---------- 거래처 ---------- */
+let editingVendor=null;
+function resetVendorForm(){editingVendor=null;['vName','vLoc','vContact','vMemo'].forEach(i=>$(i).value='');$('vFormTitle').textContent='거래처 추가';$('vCancel').hidden=true}
+$('vSave').addEventListener('click',async()=>{
+  const name=$('vName').value.trim();if(!name){toast('거래처명을 입력해주세요');$('vName').focus();return}
+  const old=editingVendor?DB.vendors.find(v=>v.id===editingVendor):null;
+  const item={id:old?old.id:'v'+Date.now(),name,location:$('vLoc').value.trim(),contact:$('vContact').value.trim(),memo:$('vMemo').value.trim(),updatedAt:Date.now()};
+  const btn=$('vSave');btn.disabled=true;
+  try{await upsert('vendors',item);DB.vendors.sort((a,b)=>String(a.name).localeCompare(String(b.name),'ko'));renderAll();toast(old?'거래처를 수정했어요':'거래처를 저장했어요');resetVendorForm()}
+  catch(e){toast(errMsg(e,'저장하지'))}finally{btn.disabled=false}
+});
+$('vCancel').addEventListener('click',resetVendorForm);
+$('vq').addEventListener('input',renderVendors);
+function renderVendors(){
+  const q=$('vq').value.trim().toLowerCase();
+  const groups=DB.vendors.map(v=>({v,ps:DB.products.filter(p=>p.vendorId===v.id)}));
+  const orphan=DB.products.filter(p=>!vendorName(p.vendorId));
+  if(orphan.length)groups.push({v:null,ps:orphan});
+  const shown=groups.filter(g=>!q||(g.v&&[g.v.name,g.v.location,g.v.contact,g.v.memo].join(' ').toLowerCase().includes(q))||g.ps.some(p=>String(p.name).toLowerCase().includes(q)));
+  if(!shown.length){$('vList').innerHTML=`<div class="vcard empty">${DB.vendors.length?'검색 결과가 없어요.':'아직 등록한 거래처가 없어요. 왼쪽에서 첫 거래처를 추가해주세요.'}</div>`;return}
+  $('vList').innerHTML=shown.map(({v,ps})=>`<article class="vcard">
+    <div class="vhead"><div><h3>${v?esc(v.name):'거래처 미지정'}</h3>${v?`<p class="vmeta">${[v.location,v.contact].filter(Boolean).map(esc).join(', ')||'상가·연락처 미입력'}</p>`:'<p class="vmeta">거래처를 지정하지 않은 상품이에요</p>'}</div>
+    ${v?`<div class="inline"><button class="ghost" data-vedit="${esc(v.id)}">수정</button><button class="ghost danger" data-vdel="${esc(v.id)}">삭제</button></div>`:''}</div>
+    ${v&&v.memo?`<p class="vmemo">${esc(v.memo)}</p>`:''}
+    <p class="vcount">상품 ${ps.length}개</p>
+    ${ps.length?`<table class="vtable num"><tbody>${ps.map(p=>`<tr><td>${esc(p.name)}${p.code?` <span class="dim">${esc(p.code)}</span>`:''}</td><td class="dim">도매 ${won(p.W)}</td><td>판매 <b>${won(p.P)}</b></td><td class="${p.profit<0?'neg':''}">${Number(p.marginPct||0).toFixed(1)}%</td><td><button data-pload="${esc(p.id)}">불러오기</button></td></tr>`).join('')}</tbody></table>`:''}
+  </article>`).join('');
+}
+$('vList').addEventListener('click',async e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.pload)return loadProduct(b.dataset.pload);
+  if(b.dataset.vedit){
+    const v=DB.vendors.find(x=>x.id===b.dataset.vedit);if(!v)return;
+    editingVendor=v.id;$('vName').value=v.name||'';$('vLoc').value=v.location||'';$('vContact').value=v.contact||'';$('vMemo').value=v.memo||'';
+    $('vFormTitle').textContent='거래처 수정';$('vCancel').hidden=false;$('vName').focus();window.scrollTo({top:0,behavior:'smooth'});
+  }
+  if(b.dataset.vdel){
+    const v=DB.vendors.find(x=>x.id===b.dataset.vdel);if(!v)return;
+    if(!confirm(`${v.name} 거래처를 삭제할까요? 연결된 상품은 거래처 미지정으로 바뀌어요.`))return;
+    try{await removeItem('vendors',v.id);toast('거래처를 삭제했어요')}catch(err){toast(errMsg(err,'삭제하지'))}
+  }
+});
+
+/* ---------- 공구 캘린더 ---------- */
+let calCursor=new Date();calCursor.setDate(1);
+const stCls=s=>s==='진행중'?'s-live':s==='마감'?'s-done':'s-plan';
+function eventsOn(ds){return DB.events.filter(ev=>ev.start&&ds>=ev.start&&ds<=(ev.end||ev.start))}
+function renderCalendar(){
+  const y=calCursor.getFullYear(),m=calCursor.getMonth();
+  $('calTitle').textContent=`${y}년 ${m+1}월`;
+  const first=new Date(y,m,1),days=new Date(y,m+1,0).getDate();
+  const weeks=Math.ceil((first.getDay()+days)/7),today=ymd(new Date());
+  let html='';
+  for(let i=0;i<weeks*7;i++){
+    const d=new Date(y,m,1-first.getDay()+i),ds=ymd(d);
+    const evs=eventsOn(ds);
+    const cls=['day',d.getMonth()!==m?'out':'',d.getDay()===0?'sun':'',ds===today?'today':''].join(' ');
+    html+=`<div class="${cls}" data-date="${ds}"><span class="d num">${d.getDate()}</span>${evs.map(ev=>{
+      const cont=ds!==ev.start&&d.getDay()!==0;
+      return `<button class="chip ${stCls(ev.status)}${cont?' cont':''}" data-ev="${esc(ev.id)}" title="${esc(ev.title)}">${cont?'&nbsp;':esc(ev.title)}</button>`}).join('')}</div>`;
+  }
+  $('calGrid').innerHTML=html;
+}
+$('calGrid').addEventListener('click',e=>{
+  const chip=e.target.closest('.chip');
+  if(chip){openEvent(DB.events.find(x=>x.id===chip.dataset.ev));return}
+  const day=e.target.closest('.day');if(day)openEvent(null,day.dataset.date);
+});
+$('calPrev').addEventListener('click',()=>{calCursor.setMonth(calCursor.getMonth()-1);renderCalendar()});
+$('calNext').addEventListener('click',()=>{calCursor.setMonth(calCursor.getMonth()+1);renderCalendar()});
+$('calToday').addEventListener('click',()=>{calCursor=new Date();calCursor.setDate(1);renderCalendar()});
+$('addEvent').addEventListener('click',()=>openEvent(null,ymd(new Date())));
+function renderUpcoming(){
+  const today=ymd(new Date());
+  const list=DB.events.filter(ev=>(ev.end||ev.start)>=today).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+  $('upList').innerHTML=list.length?list.map(ev=>{
+    const names=(ev.productIds||[]).map(id=>{const p=DB.products.find(x=>x.id===id);return p?p.name:''}).filter(Boolean);
+    return `<button class="evrow" data-ev="${esc(ev.id)}"><span class="dt num">${md(ev.start)}${ev.end&&ev.end!==ev.start?' ~ '+md(ev.end):''}</span>
+      <span><span class="tt">${esc(ev.title)}</span><span class="pp" style="display:block">${names.length?esc(names.join(', ')):(ev.productNames?esc(ev.productNames):'상품 미지정')}</span></span>
+      <span class="badge ${stCls(ev.status)}">${esc(ev.status||'준비중')}</span></button>`}).join('')
+    :'<div class="vcard empty">예정된 공구가 없어요. 캘린더에서 날짜를 눌러 일정을 추가해주세요.</div>';
+}
+$('upList').addEventListener('click',e=>{const b=e.target.closest('[data-ev]');if(b)openEvent(DB.events.find(x=>x.id===b.dataset.ev))});
+
+let editingEvent=null, evSelected=new Set();
+function renderEvProducts(){
+  const q=$('evPq').value.trim().toLowerCase();
+  const list=DB.products.filter(p=>!q||String(p.name).toLowerCase().includes(q)||evSelected.has(p.id));
+  $('evProducts').innerHTML=list.length?list.map(p=>`<label><input type="checkbox" value="${esc(p.id)}" ${evSelected.has(p.id)?'checked':''}> ${esc(p.name)} <span class="dim">${won(p.P)}원</span></label>`).join('')
+    :'<p class="dim" style="margin:6px 0">저장한 상품이 없어요. 판가계산 탭에서 먼저 저장해주세요.</p>';
+}
+$('evProducts').addEventListener('change',e=>{if(e.target.checked)evSelected.add(e.target.value);else evSelected.delete(e.target.value)});
+$('evPq').addEventListener('input',renderEvProducts);
+function openEvent(ev,date){
+  editingEvent=ev?ev.id:null;
+  $('evTitleH').textContent=ev?'공구 일정 수정':'공구 일정 추가';
+  $('evTitle').value=ev?ev.title||'':'';
+  $('evStart').value=ev?ev.start||'':date||'';
+  $('evEnd').value=ev?(ev.end||ev.start||''):date||'';
+  $('evStatus').value=ev?ev.status||'준비중':'준비중';
+  $('evMemo').value=ev?ev.memo||'':'';
+  evSelected=new Set(ev?(ev.productIds||[]):[]);
+  $('evPq').value='';renderEvProducts();
+  $('evDel').hidden=!ev;
+  $('evDlg').showModal();setTimeout(()=>$('evTitle').focus(),30);
+}
+$('evClose').addEventListener('click',()=>$('evDlg').close());
+$('evSave').addEventListener('click',async()=>{
+  const title=$('evTitle').value.trim(),start=$('evStart').value;let end=$('evEnd').value||start;
+  if(!title){toast('공구명을 입력해주세요');$('evTitle').focus();return}
+  if(!start){toast('시작일을 선택해주세요');return}
+  if(end<start)end=start;
+  const ids=[...evSelected].filter(id=>DB.products.some(p=>p.id===id));
+  const item={id:editingEvent||'e'+Date.now(),title,start,end,status:$('evStatus').value,
+    productIds:ids,productNames:ids.map(id=>DB.products.find(p=>p.id===id).name).join(', '),memo:$('evMemo').value.trim(),updatedAt:Date.now()};
+  const btn=$('evSave');btn.disabled=true;
+  try{await upsert('events',item);DB.events.sort((a,b)=>String(a.start).localeCompare(String(b.start)));renderAll();$('evDlg').close();toast(editingEvent?'일정을 수정했어요':'일정을 저장했어요')}
+  catch(e){toast(errMsg(e,'저장하지'))}finally{btn.disabled=false}
+});
+$('evDel').addEventListener('click',async()=>{
+  const ev=DB.events.find(x=>x.id===editingEvent);if(!ev)return;
+  if(!confirm(`${ev.title} 일정을 삭제할까요?`))return;
+  try{await removeItem('events',ev.id);$('evDlg').close();toast('일정을 삭제했어요')}catch(e){toast(errMsg(e,'삭제하지'))}
+});
+
+/* ---------- 탭 · 초기화 ---------- */
+const TABS=['calc','vendors','calendar'];
+function showTab(){
+  const h=location.hash.slice(1),t=TABS.includes(h)?h:'calc';
+  TABS.forEach(x=>{$('tab-'+x).hidden=x!==t});
+  document.querySelectorAll('nav.tabs a').forEach(a=>{if(a.dataset.tab===t)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current')});
+}
+window.addEventListener('hashchange',showTab);
+$('who').value=localGet(KEY_WHO);
+$('who').addEventListener('input',e=>{try{localStorage.setItem(KEY_WHO,e.target.value)}catch(_){}});
+$('refresh').addEventListener('click',()=>loadAll());
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!$('evDlg').open)loadAll(true)});
+bindCalc();fillCalcInputs();showTab();renderAll();loadAll();
+</script>
+</body>
+</html>
